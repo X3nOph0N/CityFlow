@@ -173,7 +173,7 @@ def group_connections_by_start_end(connections):
 
 
 def calc_edge_compass_angle(edge):
-    north_ray = sympy.Ray((0, 0), (0, 1))
+    north_ray = sympy.Ray2D((0, 0), (0, 1))
     # 反向算进入edge，直观。
     edge_ray = sympy.Ray(*edge.getShape()[:2][::-1])
     angle = north_ray.closing_angle(edge_ray)
@@ -186,7 +186,7 @@ def calc_edge_compass_angle(edge):
 
 
 def calc_edge_compass_angle_no_modify(edge):
-    north_ray = sympy.Ray((0, 0), (0, 1))
+    north_ray = sympy.Ray2D((0, 0), (0, 1))
     # 要算所有edge，所以不要反向。
     edge_ray = sympy.Ray(*edge.getShape()[:2])
     angle = north_ray.closing_angle(edge_ray)
@@ -292,7 +292,7 @@ def filter_roadlinks_by_startedge(roadLinks,lane_id):
 
 def fill_empty_phase(current_phase,count):
     need_fill_count = count - len(current_phase)
-    for x in range(need_fill_count):
+    for x in range(need_fill_count):#no question
         empty_phase_dict = {
             'availableRoadLinks': [],
             'time': 0,
@@ -354,7 +354,7 @@ def node_to_intersection(node,tls_dict,edge_dict):
                     path = {
                         "startLaneIndex": _cityflow_get_lane_index_in_edge_cor(start_lane, start_road),
                         "endLaneIndex": end_inx,
-                        # ytodo: 或许改为起始lane结束点，路口点，结束lane起始点。
+                        # todo: 或许改为起始lane结束点，路口点，结束lane起始点。
                         "points": [start_point, end_point]  # warning 飞行模式
                     }
                     roadLink["laneLinks"].append(path)
@@ -395,10 +395,11 @@ def node_to_intersection(node,tls_dict,edge_dict):
             G_to_lane_dict = {}
             for connec in tls_dict[nodeid]._connections:
                 G_to_lane_dict[connec[-1]] = connec[0].getID()
-
-            for phase,duration in tls_dict[nodeid]._programs['0']._phases:
+            #for phase,duration in tls_dict[nodeid]._programs['0']._phases:
+            for currentPhase in tls_dict[nodeid]._programs['0']._phases :
                 lane_list = []
-                for i,alpha in enumerate(phase):
+                #for i,alpha in enumerate(phase):
+                for i,alpha in enumerate(currentPhase.state):
                     if (alpha == 'G' or alpha == 'g') and i in G_to_lane_dict.keys():
                         lane_list.append(G_to_lane_dict[i])
 
@@ -417,7 +418,7 @@ def node_to_intersection(node,tls_dict,edge_dict):
                     index_list += [item[0] for item in index_roadlink_list]
                 phase_dict = {
                     'availableRoadLinks': list(set(index_list)),
-                    'time': duration
+                    'time': currentPhase.duration#'time':duration
                 }
                 all_phase.append(phase_dict)
             intersection["trafficLight"]["lightphases"] = all_phase
@@ -505,7 +506,6 @@ def main(args):
     tls_dict = {}
     for tls in net.getTrafficLights():
         tls_dict[tls.getID()] = tls
-
     print('Start processing '+str(len(tls_dict))+" traffic lights")
     edge_dict = {}
     for edge_ in net.getEdges():
@@ -534,6 +534,7 @@ if __name__ == '__main__':
 
     main(args)
     print("Cityflow net file generated successfully!")
+    
 
 
 '''
